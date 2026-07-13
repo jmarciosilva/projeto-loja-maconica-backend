@@ -1,66 +1,86 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ARLS Gestão — Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST e painel administrativo em Laravel para a plataforma de gestão de Lojas Maçônicas. Consulte o [`README.md`](../README.md) da raiz para a visão geral do produto e o [`ROADMAP.md`](ROADMAP.md) desta pasta para o detalhamento técnico do backend.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3, Laravel 12.
+- MySQL 8 como banco principal (persistência definida para todos os ambientes, incluindo desenvolvimento local via Laragon).
+- Laravel Sanctum para autenticação por token (API) e sessão (painel web).
+- Redis reservado para cache, filas e rate limit em estágios futuros (hoje `SESSION_DRIVER`, `CACHE_STORE` e `QUEUE_CONNECTION` usam o driver `database`).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Arquitetura atual (Fase 1 — Fundação)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+O código de domínio vive em `app/Modules/{ModuleName}`, conforme o padrão definido no [ROADMAP geral](../ROADMAP.md#14-boas-práticas-de-desenvolvimento). Apenas infraestrutura genuinamente transversal (`Controller` base, `AppServiceProvider`) permanece em `app/Http` e `app/Providers`.
 
-## Learning Laravel
+- **`app/Modules/Administration`**: dados de Loja (tenant), usuários, papéis e permissões.
+  - `Models`: `Lodge`, `User`, `Role`, `Permission`, `AuditLog` — todos com `uuid` público e soft delete quando aplicável.
+  - `Http/Resources`: `LodgeResource`, `UserResource`.
+  - RBAC básico via `Role::permissions()` e `User::hasPermission()`.
+- **`app/Modules/Auth`**: fluxo de autenticação.
+  - `Http/Controllers/AuthController.php`: login (token por dispositivo via Sanctum), `me` e `logout`, com registro em `audit_logs` a cada ação sensível.
+  - `Http/Requests/LoginRequest.php`, `Http/Middleware/ResolveTenantFromHeader.php` (resolve o contexto da Loja pelo header `X-Lodge-Uuid`, valida que está ativa e impede acesso cruzado entre Lojas).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Cada módulo novo (Obreiros, Secretaria, Tesouraria...) deve seguir o mesmo padrão: `Models`, `Http/Controllers`, `Http/Requests`, `Http/Resources`, `Services`, `Repositories`, `Policies`, `Events`, `Listeners`, `Jobs` — apenas as pastas realmente necessárias.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+**Nota sobre factories**: como os models não estão mais em `app/Models`, o `AppServiceProvider` registra um resolver de nomes de factory (`Factory::guessFactoryNamesUsing`) e cada factory declara `protected $model` explicitamente. Ao criar um novo model com factory, sempre declare `protected $model = SeuModel::class;` na respectiva factory.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Requisitos
 
-## Laravel Sponsors
+- PHP 8.3.
+- Composer.
+- MySQL 8 rodando (ex.: Laragon, porta padrão `3306`).
+- Extensão PHP `zip` habilitada para instalar dependências Composer.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Setup local
 
-### Premium Partners
+```bash
+cd backend
+composer install
+copy .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Ajuste no `.env` os dados de conexão MySQL (padrão do Laragon: usuário `root`, sem senha):
 
-## Contributing
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=arls_gestao
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Crie o banco (se ainda não existir) e rode as migrations com seed:
 
-## Code of Conduct
+```bash
+mysql -h127.0.0.1 -P3306 -uroot -e "CREATE DATABASE IF NOT EXISTS arls_gestao CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+php artisan migrate --seed
+php artisan serve --host=127.0.0.1 --port=8001
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Usuário inicial criado pelo seed:
 
-## Security Vulnerabilities
+- E-mail: `admin@loja-piloto.test`
+- Senha: `password`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Endpoints atuais
 
-## License
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/logout`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Todas as rotas autenticadas passam por `auth:sanctum` e `ResolveTenantFromHeader`, exigindo o header `X-Lodge-Uuid` quando o usuário precisa trocar de contexto de Loja.
+
+## Verificação
+
+```bash
+php artisan test
+vendor/bin/pint --test
+```
+
+## Documentação relacionada
+
+- [`ROADMAP.md`](ROADMAP.md): fases de evolução específicas do backend.
+- [`../ROADMAP.md`](../ROADMAP.md): roadmap estratégico completo do produto (backend, mobile, landing page).

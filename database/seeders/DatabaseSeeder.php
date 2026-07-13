@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Lodge;
-use App\Models\Permission;
-use App\Models\Role;
-use App\Models\User;
+use App\Modules\Administration\Models\Lodge;
+use App\Modules\Administration\Models\Permission;
+use App\Modules\Administration\Models\Role;
+use App\Modules\Administration\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

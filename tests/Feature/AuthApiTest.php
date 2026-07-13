@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Lodge;
-use App\Models\User;
+use App\Modules\Administration\Models\Lodge;
+use App\Modules\Administration\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;

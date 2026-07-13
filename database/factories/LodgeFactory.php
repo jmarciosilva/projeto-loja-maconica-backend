@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Lodge;
+use App\Modules\Administration\Models\Lodge;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
  */
 class LodgeFactory extends Factory
 {
+    protected $model = Lodge::class;
+
     public function definition(): array
     {
         $name = fake()->company().' Lodge';

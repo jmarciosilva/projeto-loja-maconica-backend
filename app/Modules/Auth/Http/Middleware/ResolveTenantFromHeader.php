@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Modules\Auth\Http\Middleware;
 
-use App\Models\Lodge;
+use App\Modules\Administration\Models\Lodge;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

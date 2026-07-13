@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Middleware\ResolveTenantFromHeader;
+use App\Modules\Auth\Http\Controllers\AuthController;
+use App\Modules\Auth\Http\Middleware\ResolveTenantFromHeader;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {

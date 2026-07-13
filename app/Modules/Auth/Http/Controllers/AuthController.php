@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Modules\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\UserResource;
-use App\Models\AuditLog;
-use App\Models\User;
+use App\Modules\Administration\Http\Resources\UserResource;
+use App\Modules\Administration\Models\AuditLog;
+use App\Modules\Administration\Models\User;
+use App\Modules\Auth\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
