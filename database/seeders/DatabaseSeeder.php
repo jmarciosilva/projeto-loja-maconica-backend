@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use App\Modules\Administration\Models\Lodge;
-use App\Modules\Administration\Models\Permission;
-use App\Modules\Administration\Models\Role;
 use App\Modules\Administration\Models\User;
+use App\Modules\Administration\Services\LodgeProvisioningService;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +14,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-    public function run(): void
+    public function run(LodgeProvisioningService $provisioning): void
     {
         $lodge = Lodge::query()->firstOrCreate(
             ['slug' => 'loja-piloto'],
@@ -23,40 +22,35 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Loja Piloto',
                 'registration_number' => '001',
                 'email' => 'contato@loja-piloto.test',
+                'potencia' => 'GOB',
+                'rito' => 'REAA',
+                'type' => 'Loja Simbólica',
+                'address_zip_code' => '01001000',
+                'address_street' => 'Praça da Sé',
+                'address_number' => '100',
+                'address_neighborhood' => 'Sé',
+                'address_city' => 'São Paulo',
+                'address_state' => 'SP',
                 'status' => 'active',
             ],
         );
 
-        $permissions = collect([
-            ['name' => 'Acessar dashboard', 'slug' => 'dashboard.view'],
-            ['name' => 'Gerenciar usuários', 'slug' => 'users.manage'],
-            ['name' => 'Gerenciar permissões', 'slug' => 'permissions.manage'],
-            ['name' => 'Gerenciar configurações da Loja', 'slug' => 'settings.manage'],
-        ])->map(fn (array $permission) => Permission::query()->firstOrCreate(
-            ['slug' => $permission['slug']],
-            $permission,
-        ));
-
-        $adminRole = Role::query()->firstOrCreate(
-            ['lodge_id' => $lodge->id, 'slug' => 'administrador-geral'],
-            [
-                'name' => 'Administrador Geral',
-                'description' => 'Perfil inicial com acesso administrativo à Loja piloto.',
-                'is_system' => true,
-            ],
-        );
-
-        $adminRole->permissions()->sync($permissions->pluck('id'));
+        $roles = $provisioning->provisionDefaultRoles($lodge);
 
         $admin = User::query()->firstOrCreate([
             'email' => 'admin@loja-piloto.test',
         ], [
             'lodge_id' => $lodge->id,
             'name' => 'Administrador Geral',
+            'nickname' => 'Administrador',
+            'cim' => '00000001',
+            'cpf' => '00000000000',
+            'degree' => 'Mestre',
+            'whatsapp' => '11999999999',
             'password' => Hash::make('password'),
             'status' => 'active',
         ]);
 
-        $admin->roles()->syncWithoutDetaching([$adminRole->id]);
+        $admin->roles()->syncWithoutDetaching([$roles['admin']->id]);
     }
 }

@@ -27,6 +27,10 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->status === 'pending') {
+            return response()->json(['message' => 'Seu cadastro está aguardando aprovação da Loja.'], 403);
+        }
+
         if ($user->status !== 'active') {
             return response()->json(['message' => 'User is inactive.'], 403);
         }

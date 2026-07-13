@@ -12,6 +12,8 @@ class UserResource extends JsonResource
         return [
             'uuid' => $this->uuid,
             'name' => $this->name,
+            'nickname' => $this->nickname,
+            'degree' => $this->degree,
             'email' => $this->email,
             'status' => $this->status,
             'lodge' => new LodgeResource($this->whenLoaded('lodge')),

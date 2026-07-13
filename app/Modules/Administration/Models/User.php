@@ -26,6 +26,11 @@ class User extends Authenticatable
     protected $fillable = [
         'lodge_id',
         'name',
+        'nickname',
+        'cim',
+        'cpf',
+        'degree',
+        'whatsapp',
         'email',
         'password',
         'status',
